@@ -14,8 +14,8 @@
 *.suo
 
 # Project specific files
-#.vcxproj
-#.vcxproj.filters
+*.vcxproj
+*.vcxproj.filters
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
