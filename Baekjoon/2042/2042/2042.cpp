@@ -2,8 +2,11 @@
 #include <vector>
 #include <cmath>
 
+
+
 using namespace std;
 
+/*
 long long init_tree(vector<long long> & tree, vector<long long> & arr, int start, int end, int node) {
     if (start == end) {
         //if it's leaf
@@ -38,7 +41,7 @@ void update_tree(vector<long long>& tree, vector<long long>& arr, int start, int
         update_tree(tree, arr, (start + end) / 2 + 1, end, 2 * node + 1, tar, diff);
     }
     else {
-        /*IMPORTANT!!*/
+        //IMPORTANT!!
         arr[start] += diff;
     }
 }
@@ -81,3 +84,73 @@ int main()
     return 0;
 
 }
+
+*/
+
+//do same thing with BIT
+
+void update(vector<long long>& tree, int idx, long long diff) {
+
+    while (idx < tree.size()) {
+        tree[idx] += diff;
+        idx += idx & -idx;
+    }
+}
+
+long long sum(vector<long long>& tree, int l, int r) {
+    
+    long long lsum = 0, rsum = 0;
+    
+    l--;
+
+    while (l > 0) {
+        lsum += tree[l];
+        l -= l & -l;
+    }
+
+    while (r > 0) {
+        rsum += tree[r];
+        r -= r & -r;
+    }
+
+    return rsum - lsum;
+}
+
+int main()
+{
+
+    ios::sync_with_stdio(false);
+    cin.tie(0);
+    cout.tie(0);
+
+    int N, M, K;
+    cin >> N >> M >> K;
+    int idx = 1;
+
+    vector<long long> arr(N+1, 0);
+    vector<long long> tree(N + 1, 0);
+
+    while (idx <= N) {
+        cin >> arr[idx];
+        update(tree, idx, arr[idx]);
+        idx++;
+    }
+
+    idx = 0;
+    int  a, b;
+    long long c;
+    while (idx < M + K) {
+        cin >> a >> b >> c;
+        if (a == 1) {
+            update(tree, b, c - arr[b]);
+            arr[b] = c;
+        }
+        else if (a == 2) printf("%lld\n", sum(tree, b, c));
+        idx++;
+    }
+
+    return 0;
+
+}
+
+
