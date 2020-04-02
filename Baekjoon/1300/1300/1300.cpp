@@ -11,7 +11,7 @@ int main()
     int s = 1, e = k;
 
     int ret = 1;
-    //O(N^2log(k))
+    //O(Nlog(k))
     while (s <= e) {
         int cnt = 0;
         int mid = (s + e) / 2;
