@@ -80,6 +80,8 @@ int main()
     vector<int> larr(q, 0), rarr(q, m-1);
     vector<pair<int, int>> ret(q, make_pair(-1 , -1));
 
+
+    //(M+Q)logMlogN
     while (1) {
 
         bool search = false;
@@ -99,6 +101,8 @@ int main()
 
         Init(n);
 
+
+        //(MlogN (Union) + QlogN(Find) )
         for (int i = 0; i < m; i++) {
             edge& e = edges[i];
 
