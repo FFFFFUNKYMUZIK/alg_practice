@@ -65,6 +65,7 @@ int main()
         idx++;
     }
 
+    //O(MlogM)
     sort(edges.begin(), edges.end());
 
     int q;
