@@ -157,6 +157,7 @@ int main()
 
                 for (int k = 0; k < own[qn].size(); k++) {
                     acc[qn] += sum(fenwick, own[qn][k]);
+                    //without this break, overflow occurs
                     if (acc[qn] >= tar[qn]) break;
                 }
 
