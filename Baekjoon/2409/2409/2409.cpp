@@ -4,6 +4,7 @@
 
 using namespace std;
 
+
 bool backtrack(vector<int>& len, vector<int>& des, vector<int>& descnt, int idx, int s, int touse, int left) {
 
     //printf("%d ", idx);
@@ -135,4 +136,5 @@ int main()
 
     return 0;
 }
+
 
