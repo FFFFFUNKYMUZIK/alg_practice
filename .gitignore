@@ -12,6 +12,9 @@
 *.sdf
 *.sln
 *.suo
+*stdafx.cpp
+*stdafx.h
+*targetver.h
 
 # Project specific files
 *.vcxproj
