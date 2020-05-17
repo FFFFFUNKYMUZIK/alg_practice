@@ -15,13 +15,16 @@ You may assume no duplicates in the word list.
 You may assume beginWord and endWord are non-empty and are not the same.
 */
 
+#if 0
 
 //Time complexity O(L*N^2+N) = O(LN^2)
+//950ms(32.69%) & 172.8(45%)
 class Solution {
 public:
 
     vector<vector<int>> dp;
 
+    //O(L)
     bool isadj(string &a, string &b) {
         int cnt = 0;
         int len = a.length();
@@ -57,6 +60,7 @@ public:
 
         vector<vector<int>> edges(n);
 
+        //O(N * N * L)
         for (int i = 0; i < n; i++) {
             string cur = wordList[i];
             for (int j = i + 1; j < n; j++) {
@@ -72,6 +76,8 @@ public:
         queue<pair<int, vector<string>>> q;
         q.push(make_pair(s, vector<string>()));
 
+
+        //O(N)
         pair<int, vector<string>> cur;
         while (!q.empty()) {
             cur = q.front();
@@ -100,6 +106,94 @@ public:
         return ret;
     }
 };
+
+#else
+
+#include <unordered_set>
+#include <unordered_map>
+
+
+//44ms reference solution
+//O(N*L*logN)
+class Solution {
+public:
+    //和word ladder 1 相比，区别在于需要一个map记录word 映射，已经2个标记位found和reverse，并用dfs回溯寻找所有路径
+    vector<vector<string>> findLadders(string beginWord, string endWord, vector<string>& wordList) {
+        vector<vector<string>> result;
+        if (beginWord.length() != endWord.length() || wordList.empty()) return result;
+        unordered_set<string> dict(wordList.begin(), wordList.end());
+        if (!dict.count(endWord)) return result;
+        unordered_set<string> q1 = { beginWord };
+        unordered_set<string> q2 = { endWord };
+        unordered_set<string> temp;
+        unordered_map<string, vector<string>> wordMap;
+        bool found = false;
+        bool reverse = false;   //reverse用来保证wordMap的key一定是value的上一层，保证回溯的顺序不会乱
+        int wordLength = beginWord.length();
+        while (!q1.empty() && !q2.empty() && !found) {
+            if (q1.size() > q2.size()) {
+                swap(q1, q2);
+                reverse = !reverse;
+            }
+            //删除dict中上一阶梯的string,以避免cycle
+            for (auto& s : q1) {
+                dict.erase(s);
+            }
+            for (auto& s : q1) {
+                string w = s;  //因为需要将word 映射存入map，需要一个变量来存q1中的旧word
+                for (int i = 0; i < wordLength; i++) {
+                    char ch = w[i];
+                    for (char j = 'a'; j <= 'z'; j++) {
+                        if (j == ch) continue;
+                        w[i] = j;
+                        if (!dict.count(w)) continue;
+                        if (q2.count(w)) {
+                            found = true;
+                        }
+                        else {
+                            //dict.erase(w);   不能在这里删，应该在遍历q1前就将q1中的所有word从dict里删掉
+                            temp.insert(w);
+                        }
+                        if (!reverse) {
+                            wordMap[s].push_back(w);
+                        }
+                        else {
+                            wordMap[w].push_back(s);
+                        }
+                    }
+                    w[i] = ch;
+                }
+            }
+            q1 = temp;
+            temp.clear();
+        }
+        if (!found) return result;
+        vector<string> cur = { beginWord };
+        dfs(endWord, cur, result, wordMap);
+        return result;
+    }
+
+    void dfs(const string& endWord,
+        vector<string>& cur,
+        vector<vector<string>>& result,
+        unordered_map<string, vector<string>>& wordMap) {
+        if (cur.back() == endWord) {
+            result.push_back(cur);
+            return;
+        }
+        if (wordMap.find(cur.back()) == wordMap.end()) {
+            return;
+        }
+        for (const auto& w : wordMap[cur.back()]) {
+            cur.push_back(w);
+            dfs(endWord, cur, result, wordMap);
+            cur.pop_back();
+        }
+    }
+};
+
+
+#endif
 
 int main()
 {
