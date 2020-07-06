@@ -59,7 +59,7 @@ public:
     }
 };
 
-#elif 1
+#elif 0
 
 //segment tree w/ lazy propagation
 //range update(lazy propagation, O(logN)) & point query (O(logN))
@@ -69,7 +69,6 @@ class Solution {
     
     typedef struct TreeNode_t{
         int lazy;
-        int val;
     } TreeNode;
     
     vector<TreeNode> tree;
@@ -79,7 +78,7 @@ class Solution {
     // index : index of current tree node
     void update(int index, int l, int r, int s, int e, int val){
         if ( e < l || s > r ) return;
-        if ( l <= s && e <= r){
+        if ( s <= l && r <= e){
             tree[index].lazy = max(tree[index].lazy, val);
             return;   
         }
@@ -93,28 +92,28 @@ class Solution {
     // q : query point
     // index : index of current tree node
     int query(int index, int l, int r, int q){
-        printf("l r q %d %d %d\n", l, r, q);
+
         if (tree[index].lazy != 0){
-            printf("%d \n", tree[index].lazy);
-            tree[index].val = max(tree[index].val, tree[index].lazy);
-            
-            if (l!=r){
+            if (l!=r){ //Not a leaf node
                 tree[2*index].lazy = max(tree[index].lazy, tree[2*index].lazy);
                 tree[2*index + 1].lazy = max(tree[index].lazy, tree[2*index + 1].lazy);
+	      tree[index].lazy = 0;
             }
-            tree[index].lazy = 0;
         }
         
         if( l==r ){
-            return tree[index].val;
+            //leaf node case
+            return tree[index].lazy;
         }
-        else if(q<l || r<q){
-            return 0;            
-        }
-        
-        int mid = (l+r)/2;
-        return max(query(2*index, l, mid, q), query(2*index + 1, mid+1, r, q));
-    }
+    
+    //tail recursion    
+    int mid = (l+r)/2;
+	if ( q<=mid ) return query(2*index, l, mid, q);
+	else return query(2*index + 1, mid+1, r, q);
+
+	//Never reach here
+        return 0; 
+  }
         
 public:
     vector<vector<int>> getSkyline(vector<vector<int>>& buildings) {
@@ -139,24 +138,19 @@ public:
         }
         
         int tree_h = ceil(log2(sqzcnt)) + 1;
-        tree = vector<TreeNode>((1<<tree_h) + 1, {0,0});
-        
-        
-        printf("YEYEYEYEYEYE\n");
+        tree = vector<TreeNode>((1<<tree_h) + 1, {0});
+                
         for (int i=0;i<n;i++){
             update(1, 0, sqzcnt-1, sqzmap[buildings[i][0]], sqzmap[buildings[i][1]] - 1, buildings[i][2]);
         }
-        printf("YEYEYEYEYEYE\n");
         
         int pre = 0;
         for (int i=0;i<2*n;i++){
-            printf("%d\n", i);
-            printf("%d\n", sqzmap[key_cand[i]]);
             int h = query(1, 0, sqzcnt-1, sqzmap[key_cand[i]]);
-            printf("%d\n", h);
             if (h!=pre){
                 ret.push_back({key_cand[i], h});
             }
+            pre=h;
         }
         
         return ret;
@@ -165,6 +159,84 @@ public:
 
 #else
 //Binary Indexed Tree(BIT, fenwick)
+//refer to discussion
+//update & query bit operation is reverse compared to regular BIT
+//update operation to kth point affects 1~k element
+//point query compare all stored value of segments which it is included. (the segment value is stored by the update of buildings which starts earlier and ends later)
 
+class Solution {
+        
+    vector<int> tree;
+    
+    // q : update point
+    // val : update value
+    
+    void update(int q, int val){
+        while(q>0){
+            tree[q] = max(tree[q], val);
+            q -= q & -q;
+        }
+    }
+        
+    // q : query point
+    // n : size of array = size of tree
+    
+    int query(int n, int q){        
+        int h = 0;
+        while(q<=n){
+            h = max(h, tree[q]);
+            q += q&-q;
+        }
+        return h;
+    }
+        
+        typedef struct tri_t{
+            int a,b,c;            
+        } tri;
+    
+public:
+    vector<vector<int>> getSkyline(vector<vector<int>>& buildings) {
+        vector<vector<int>> ret;
+        if (buildings.size() == 0) return ret;
+        
+        int n = buildings.size();
+                       
+        vector<tri> key_cand;
+        
+        for (int i=0;i<buildings.size();i++){
+            key_cand.push_back({buildings[i][0], 1, i }); //up
+            key_cand.push_back({buildings[i][1], 0, i }); //down
+        }
+        
+        //sort(key_cand.begin(), key_cand.end(), [buildings](tri& l, tri& r) -> bool {if (l.a==r.a){if (l.b==r.b){ return buildings[l.c][2]>buildings[r.c][2];} return l.b>r.b;} return l.a<r.a; });
+        // buildings(call by value) instead of &buildings(call by reference) make T.L.E. (copy buildings vector every calling of lambda function)
+        sort(key_cand.begin(), key_cand.end(), [&buildings](tri& l, tri& r) -> bool {if (l.a==r.a){if (l.b==r.b){ return buildings[l.c][2]>buildings[r.c][2];} return l.b>r.b;} return l.a<r.a; });
+        
+        unordered_map<int, int> sqzmap;
+        int sqzcnt = 1;
+        for (int i=0;i<key_cand.size();i++){
+            if (sqzmap.find(key_cand[i].a) == sqzmap.end()) sqzmap[key_cand[i].a] = sqzcnt++;
+        }
+        
+        tree = vector<int>(sqzcnt, 0);
+        
+        int pre = 0;
+        for (int i=0;i<2*n;i++){
+            tri cur = key_cand[i];
+            
+            if (cur.b==1){ //up
+                update(sqzmap[buildings[cur.c][1]]-1, buildings[cur.c][2]);
+            }
+            int h = query(sqzcnt-1, sqzmap[cur.a]);
+            //printf("%d %d \n", cur.a, h);
+            if (h!=pre){
+                ret.push_back({cur.a, h});
+                pre = h;
+            }
+        }
+                
+        return ret;
+    }
+};
 
 #endif
