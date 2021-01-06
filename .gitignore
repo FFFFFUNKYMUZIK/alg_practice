@@ -15,6 +15,7 @@
 *stdafx.cpp
 *stdafx.h
 *targetver.h
+*.DS_Store
 
 # Project specific files
 *.vcxproj
