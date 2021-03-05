@@ -2,67 +2,51 @@ class Solution {
 public:
     int maximumSwap(int num) {
 
-    	vector<int> digits;
-    	int orig = num;
+        vector<int> digits;
+        int org = num;
 
-        while(orig>0){
-        	digits.push_back(orig%10);
-        	orig/=10;
+        while(org > 0){
+            digits.push_back(org%10);
+            org /= 10;
         }
 
-        int n = digits.size();
-        int c;
+        int pre = 9;
+        int i;
 
-        class el{
-        public:
-        	el(int i, int d) : idx(i), dig(d) {};
-        	int idx;
-        	int dig;
-        };
-
-        stack<el> st, stc;
-        int j = n - 1;
-
-        while(j>=0){
-        	c = digits[j];
-        	while(!st.empty() && st.top().dig <= c){
-	        	st.pop();
-        	}
-
-        	st.push({j, c});
-        	j--;
+        for (i=digits.size() - 1;i>=0;i--){
+            if (digits[i] > pre){
+                break;
+            }
+            pre = digits[i];
         }
 
-        while (!st.empty()){
-        	stc.push(st.top());
-        	st.pop();
+        if (i==-1) return num;
+
+        int maxidx = 0;
+
+        for (;i>=0;i--){
+            if (digits[i] >= digits[maxidx]){
+                maxidx = i;
+            }
         }
 
-        int i = n - 1;
-        while (!stc.empty()){
-        	if (i != stc.top().idx){
-        		j = stc.top().idx;
-        		break;
-        	}
-        	stc.pop();
-        	i--;
+        for (i=digits.size() -1;i>=0;i--){
+            if (digits[i] < digits[maxidx]){
+                break;
+            }
         }
 
-		int ret = num;
-        if (!stc.empty()){
-        	int tmp = digits[i];
-        	digits[i] = digits[j];
-        	digits[j] = tmp;
+        int tmp = digits[i];
+        digits[i] = digits[maxidx];
+        digits[maxidx] = tmp;
 
-        	i = n-1;
-        	ret = 0;
-        	while(i>=0){
-	        	ret *= 10;
-        		ret = (ret + digits[i]);
-        		i--;
-        	}
+        int ret = 0;
+        for (i=digits.size() -1;i>=0;i--){
+            ret *= 10;
+            ret += digits[i];
         }
 
         return ret;
+
     }
 };
